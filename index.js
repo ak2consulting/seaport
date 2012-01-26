@@ -66,20 +66,22 @@ exports.createServer = function (opts) {
         };
         
         self.query = function (role, cb) {
-            var roles = Object.keys(ports).reduce(function (acc, ip) {
-                Object.keys(ports[ip]).forEach(function (r) {
-                    if (!acc[r]) acc[r] = [];
-                    acc[r].push({ host : ip, port : ports[ip][r] });
-                });
-                return acc;
-            });
-            
-            if (role === undefined) cb(roles)
-            else cb(roles[role] || []);
+            cb(server.query(role));
         };
         
         return self;
     }
+    
+    server.query = function () {
+        var roles = Object.keys(ports).reduce(function (acc, ip) {
+            Object.keys(ports[ip]).forEach(function (r) {
+                if (!acc[r]) acc[r] = [];
+                acc[r].push({ host : ip, port : ports[ip][r] });
+            });
+            return acc;
+        });
+        return role === undefined ? roles : roles[role] || [];
+    };
     
     server.use(upnode.ping);
     return server;
