@@ -1,7 +1,7 @@
 seaport
 =======
 
-Centrol role-based port allocation for clusters.
+central role-based port allocation for clusters
 
 example
 =======
