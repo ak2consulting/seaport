@@ -116,7 +116,12 @@ seaport.createServer = function (opts) {
             });
         };
         
-        self.query = function (env, role, cb) {
+        self.query = function (env_, role, cb) {
+            if (typeof role === 'function') {
+                cb = role;
+                role = env_;
+                env_ = env;
+            }
             cb(server.query(env, role));
         };
         
@@ -124,7 +129,10 @@ seaport.createServer = function (opts) {
     }
     
     server.query = function (env, role) {
-        return role === undefined ? roles : roles[role] || [];
+        return role === undefined
+            ? roles
+            : roles[env] && roles[env][role] || []
+        ;
     };
     
     server.use(upnode.ping);
