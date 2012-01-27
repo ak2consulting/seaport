@@ -3,6 +3,8 @@ seaport
 
 central role-based port allocation for clusters
 
+![crane](http://substack.net/crane.png)
+
 example
 =======
 
