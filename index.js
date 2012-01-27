@@ -8,7 +8,7 @@ var seaport = module.exports = function (env) {
     function connect () {
         var up = upnode({ environment : env }).connect.apply(null, arguments);
         
-        [ 'allocate', 'free', 'query' ].forEach(function (name) {
+        [ 'allocate', 'free', 'query', 'assume' ].forEach(function (name) {
             up[name] = function () {
                 var args = [].slice.call(arguments);
                 
@@ -84,26 +84,45 @@ seaport.createServer = function (opts) {
             allocatedPorts.push(port);
             
             cb(port);
-            var alloc = {
+            server.emit('allocate', {
                 role : role,
                 host : addr,
                 port : port,
                 environment : env,
-            };
-            server.emit('allocate', alloc);
+            });
+        };
+        
+        self.assume = function (role, port, cb) {
+            var ix = ports[addr].indexOf(port);
+            if (ix >= 0) ports[addr].splice(ix, 1);
+            ports[addr].push(port);
+            
+            roles[env][role] = roles[env][role].filter(function (r) {
+                return r.port !== port;
+            });
+            
+            server.emit('assume', {
+                role : role,
+                host : addr,
+                port : port, 
+                environment : env,
+            });
+            cb();
         };
         
         self.free = function (port, cb) {
-            if (ports[addr]) delete ports[addr][port];
+            if (ports[addr]) {
+                var ix = ports[addr].indexOf(port);
+                if (ix >= 0) ports[addr].splice(ix, 1);
+            }
             
             var foundRole = undefined;
             Object.keys(roles[env]).forEach(function (role) {
                 var rs = roles[env][role];
-                rs.forEach(function (r) {
-                    if (r.port === port && r.host === addr) {
-                        foundRole = role;
-                        delete roles[env][role];
-                    }
+                roles[env][role] = rs.filter(function (r) {
+                    var x = !(r.port === port && r.host === addr);
+                    if (!x) foundRole = role;
+                    return x;
                 });
             });
             

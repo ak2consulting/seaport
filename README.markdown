@@ -92,6 +92,12 @@ ports.free(port, cb)
 
 Give a port back. `cb()` fires when complete.
 
+ports.assume(role, port, cb)
+----------------------------
+
+Dictate to the server what port you are listening on.
+This is useful for re-establishing a route without restarting the server.
+
 ports.query(env, role, cb)
 --------------------------
 
