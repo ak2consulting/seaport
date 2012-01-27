@@ -16,10 +16,12 @@ var seaport = require('seaport');
 var server = seaport.createServer();
 
 server.on('allocate', function (alloc) {
+    console.log('--- allocated ---');
     console.dir(alloc);
 });
 
 server.on('free', function (free) {
+    console.log('--- freed ---');
     console.dir(free);
 });
 
@@ -42,6 +44,7 @@ ouput:
 $ node hub.js &
 [1] 5007
 $ node web.js
+--- allocated ---
 { role: 'web',
   host: '127.0.0.1',
   port: 16856,
