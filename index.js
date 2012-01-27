@@ -8,7 +8,7 @@ var seaport = module.exports = function (env) {
     function connect () {
         var up = upnode({ environment : env }).connect.apply(null, arguments);
         
-        [ 'allocate', 'free' ].forEach(function (name) {
+        [ 'allocate', 'free', 'query' ].forEach(function (name) {
             up[name] = function () {
                 var args = [].slice.call(arguments);
                 
@@ -116,23 +116,14 @@ seaport.createServer = function (opts) {
             });
         };
         
-        self.query = function (role, cb) {
-            cb(server.query(role));
+        self.query = function (env, role, cb) {
+            cb(server.query(env, role));
         };
         
         return self;
     }
     
     server.query = function (env, role) {
-        return roles[env] && roles[env][role] || {};
-        
-        var roles = Object.keys(ports).reduce(function (acc, ip) {
-            Object.keys(ports[ip]).forEach(function (r) {
-                if (!acc[r]) acc[r] = [];
-                acc[r].push({ host : ip, port : ports[ip][r] });
-            });
-            return acc;
-        });
         return role === undefined ? roles : roles[role] || [];
     };
     
