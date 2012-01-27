@@ -54,6 +54,7 @@ seaport.createServer = function (opts) {
             addr = conn.stream.remoteAddress;
             env = remote.environment;
             if (!roles[env]) roles[env] = {};
+            if (!ports[addr]) ports[addr] = [];
         });
         
         conn.on('end', function () {
@@ -68,8 +69,6 @@ seaport.createServer = function (opts) {
                 n = 1;
             }
             if (typeof cb !== 'function') return;
-            
-            if (!ports[addr]) ports[addr] = [];
             if (!roles[env][role]) roles[env][role] = [];
             
             var r = opts.range[addr] || opts.range['*'];
@@ -97,7 +96,7 @@ seaport.createServer = function (opts) {
             if (ix >= 0) ports[addr].splice(ix, 1);
             ports[addr].push(port);
             
-            roles[env][role] = roles[env][role].filter(function (r) {
+            roles[env][role] = (roles[env][role] || []).filter(function (r) {
                 return r.port !== port;
             });
             
