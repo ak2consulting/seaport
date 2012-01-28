@@ -1,6 +1,5 @@
 var upnode = require('upnode');
 var dnode = require('dnode');
-var port = parseInt(process.argv[2], 10);
 
 var seaport = module.exports = function (env) {
     function connect () {
