@@ -8,8 +8,63 @@ central role-based port allocation for clusters
 example
 =======
 
-auto-allocation
----------------
+simple service
+--------------
+
+First spin up the seaport server:
+
+```
+$ seaport 9090
+seaport listening on :9090
+```
+
+then obtain a port for a server called `'http server'`:
+
+server.js:
+
+``` js
+var seaport = require('seaport');
+var ports = seaport.connect('localhost', 9090);
+var http = require('http');
+
+var server = http.createServer(function (req, res) {
+    res.end('beep boop\r\n');
+});
+
+ports.service('http server', function (port, ready) {
+    server.listen(port, ready);
+});
+```
+
+now just `get()` that `'http server'` service!
+
+client.js:
+
+``` js
+var seaport = require('seaport');
+var ports = seaport.connect(9090);
+var request = require('request');
+
+ports.get('http server', function (ps) {
+    var u = 'http://' + ps[0].host + ':' + ps[0].port;
+    request(u).pipe(process.stdout);
+});
+```
+
+output:
+
+```
+$ node server.js &
+[1] 6012
+$ node client.js
+beep boop
+```
+
+and if you spin up `client.js` before `server.js` then it still works because
+`get()` queues the response!
+
+upnode service connections
+--------------------------
 
 beep.js
 
@@ -48,53 +103,6 @@ $ node beep.js &
 [3] 9040
 fives(11) : 55
 $ 
-```
-
-manually allocate
------------------
-
-hub.js
-
-``` js
-var seaport = require('seaport');
-var server = seaport.createServer();
-
-server.on('allocate', function (alloc) {
-    console.log('--- allocated ---');
-    console.dir(alloc);
-});
-
-server.on('free', function (free) {
-    console.log('--- freed ---');
-    console.dir(free);
-});
-
-server.listen(9090);
-```
-
-web.js
-
-``` js
-var seaport = require('seaport');
-var ports = seaport('staging').connect('localhost', 9090);
-
-ports.allocate('web', function (port) {
-    console.log('allocated ' + port);
-});
-```
-
-ouput:
-
-```
-$ node hub.js &
-[1] 5007
-$ node web.js
---- allocated ---
-{ role: 'web',
-  host: '127.0.0.1',
-  port: 16856,
-  environment: 'staging' }
-allocated 16856
 ```
 
 methods

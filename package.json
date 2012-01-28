@@ -31,7 +31,8 @@
         "optimist" : "0.3.x"
     },
     "devDependencies" : {
-        "tap" : "0.1.x"
+        "tap" : "0.1.x",
+        "request" : "2.9.x"
     },
     "engines" : {
         "node" : ">=0.4.0"
