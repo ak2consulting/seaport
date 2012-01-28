@@ -22,6 +22,9 @@ test('alloc and free', function (t) {
         ports.close();
         server.close();
         t.end();
+        setTimeout(function () {
+            process.exit(); // whatever
+        }, 100);
     });
     
     server.listen(port);
@@ -34,6 +37,7 @@ test('alloc and free', function (t) {
         
         ports.query('http', function (ps) {
             t.deepEqual(ps, [ { host : '127.0.0.1', port : p } ]);
+            ports.close();
         });
     });
 });
