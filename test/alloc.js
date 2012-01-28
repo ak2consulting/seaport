@@ -34,7 +34,6 @@ test('alloc and free', function (t) {
         
         ports.query('http', function (ps) {
             t.deepEqual(ps, [ { host : '127.0.0.1', port : p } ]);
-            ports.close();
         });
     });
 });

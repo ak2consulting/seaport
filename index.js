@@ -229,8 +229,6 @@ seaport.createServer = function (opts) {
             if (ps.length > 0) cb(ps)
             else {
                 function onalloc (alloc) {
-console.log('onalloc!');
-console.dir(alloc);
                     ps = server.query(env_, role);
                     if (ps.length > 0) {
                         server.removeListener('allocate', onalloc);

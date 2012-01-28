@@ -8,8 +8,50 @@ central role-based port allocation for clusters
 example
 =======
 
-allocate a staging web server
------------------------------
+auto-allocation
+---------------
+
+beep.js
+
+``` js
+var seaport = require('seaport');
+var ports = seaport('testing').connect(9090);
+
+var beep = ports(function (remote, conn) {
+    this.fives = function (n, cb) { cb(n * 5) }
+}).listen('beep');
+```
+
+connect.js
+
+``` js
+var seaport = require('seaport');
+var ports = seaport('testing').connect(9090);
+
+var up = ports.connect('beep');
+up(function (remote) {
+    remote.fives(11, function (n) {
+        console.log('fives(11) : ' + n);
+    });
+});
+```
+
+output
+
+```
+$ seaport 9090 &
+[1] 11035
+seaport listening on :9090
+$ node connect.js &
+[2] 7143
+$ node beep.js &
+[3] 9040
+fives(11) : 55
+$ 
+```
+
+manually allocate
+-----------------
 
 hub.js
 
@@ -81,6 +123,24 @@ var ports = seaport(env).connect(...)
 -------------------------------------
 
 Connect to the seaport service at `...` under the environment `env`.
+
+var up = ports.connect(role)
+----------------------------
+
+Return a new [upnode](https://github.com/substack/upnode) connection that
+fulfills the `role` for the given environment `env`.
+
+var service = ports(fn)
+-----------------------
+
+Create a new [upnode](https://github.com/substack/upnode) service with the
+[dnode](https://github.com/substack/dnode) constructor `fn`.
+
+service.listen(role)
+--------------------
+
+Expose the [upnode](https://github.com/substack/upnode) `service` to the seaport
+server fulfilling the role `role`.
 
 ports.allocate(role, cb)
 ------------------------
