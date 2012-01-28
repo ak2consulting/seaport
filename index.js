@@ -7,9 +7,13 @@ var seaport = module.exports = function (env) {
     
     function connect () {
         var up = upnode({ environment : env }).connect.apply(null, arguments);
+        var self = {
+            up : up,
+            close : up.close.bind(up),
+        };
         
         [ 'allocate', 'free', 'query', 'assume' ].forEach(function (name) {
-            up[name] = function () {
+            self[name] = function () {
                 var args = [].slice.call(arguments);
                 
                 up(function (remote) {
@@ -18,7 +22,7 @@ var seaport = module.exports = function (env) {
             };
         });
         
-        return up;
+        return self;
     }
     return { connect : connect }
 };
@@ -106,7 +110,7 @@ seaport.createServer = function (opts) {
                 port : port, 
                 environment : env,
             });
-            cb();
+            if (cb) cb();
         };
         
         self.free = function (port, cb) {
