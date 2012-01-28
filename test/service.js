@@ -2,7 +2,7 @@ var seaport = require('../');
 var test = require('tap').test;
 
 test('service', function (t) {
-    var serverPort = Math.floor(Math.random() * 5e5 + 1e4);
+    var serverPort = Math.floor(Math.random() * 5e5 + 1e5);
     var server = seaport.createServer();
     server.listen(serverPort);
     

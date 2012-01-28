@@ -70,7 +70,7 @@ var seaport = module.exports = function (env) {
         self.up = up;
         self.close = up.close.bind(up);
         
-        [ 'allocate', 'free', 'query', 'assume', 'get', 'service' ]
+        [ 'free', 'query', 'assume', 'get', 'service' ]
             .forEach(function (name) {
                 self[name] = function () {
                     var args = [].slice.call(arguments);
@@ -81,6 +81,21 @@ var seaport = module.exports = function (env) {
                 };
             })
         ;
+        
+        self.allocate = function () {
+            var args = [].slice.call(arguments);
+            var fn = args[args.length - 1];
+            if (fn.length === 1) {
+                args[args.length - 1] = function (port, ready) {
+                    fn(port);
+                    ready();
+                };
+            }
+            
+            up(function (remote) {
+                remote.allocate.apply(null, args);
+            });
+        };
         
         self.service = function (role, fn) {
             self.allocate(role, function (port, ready) {
@@ -166,13 +181,7 @@ seaport.createServer = function (opts) {
                 });
             }
             
-            if (cb.length === 1) {
-                cb(port);
-                ready();
-            }
-            else {
-                cb(port, ready);
-            }
+            cb(port, ready);
         };
         
         self.assume = function (role, port, cb) {

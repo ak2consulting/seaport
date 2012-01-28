@@ -3,7 +3,7 @@ var seaport = require('../');
 
 test('connect with upnode', function (t) {
     t.plan(1);
-    var port = Math.floor(Math.random() * 5e5 + 1e4);
+    var port = Math.floor(Math.random() * 5e5 + 1e5);
     var server = seaport.createServer();
     server.listen(port);
     
