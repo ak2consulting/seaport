@@ -124,6 +124,23 @@ var ports = seaport(env).connect(...)
 
 Connect to the seaport service at `...` under the environment `env`.
 
+ports.get(role, cb)
+-------------------
+
+Request an array of host/port objects through `cb(services)` that fulfill `role`.
+
+If there are no such services then the callback `cb` will get queued until some
+service fulfilling `role` gets allocated.
+
+ports.service(role, cb)
+-----------------------
+
+Create a service fulfilling the role of `role`.
+
+Receive a callback `cb(port, ready)` with the allocated `port` and `ready()`
+function to call and re-assume the `port` every time the seaport service
+connection gets interrupted.
+
 var up = ports.connect(role)
 ----------------------------
 
@@ -145,7 +162,11 @@ server fulfilling the role `role`.
 ports.allocate(role, cb)
 ------------------------
 
-Request a port to fulfil a `role`. `cb(port)` fires with the result.
+Request a port to fulfil a `role`. `cb(port, ready)` fires with the result.
+
+Call `ready()` when your service is ready to start accepting connections.
+
+If `cb.length === 1` then `ready()` will be fired automatically.
 
 ports.free(port, cb)
 --------------------
