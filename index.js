@@ -39,6 +39,10 @@ var seaport = module.exports = function (env) {
                     
                     self.allocate(role, function (port) {
                         server.listen(port, fn);
+                        
+                        up.on('down', function () {
+                            self.assume(role, port);
+                        });
                     });
                     return server;
                 },
@@ -147,10 +151,12 @@ seaport.createServer = function (opts) {
             var ix = ports[addr].indexOf(port);
             if (ix >= 0) ports[addr].splice(ix, 1);
             ports[addr].push(port);
+            allocatedPorts.push(port);
             
             roles[env][role] = (roles[env][role] || []).filter(function (r) {
                 return r.port !== port;
             });
+            roles[env][role].push({ host : addr, port : port });
             
             server.emit('assume', {
                 role : role,
@@ -215,6 +221,8 @@ seaport.createServer = function (opts) {
             if (ps.length > 0) cb(ps)
             else {
                 function onalloc (alloc) {
+console.log('onalloc!');
+console.dir(alloc);
                     ps = server.query(env_, role);
                     if (ps.length > 0) {
                         server.removeListener('allocate', onalloc);
