@@ -7,6 +7,5 @@ var server = http.createServer(function (req, res) {
 });
 
 ports.service('http server', function (port, ready) {
-    console.log('port='+port);
     server.listen(port, ready);
 });
