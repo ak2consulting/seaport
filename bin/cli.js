@@ -31,7 +31,9 @@ else {
             });
         })
         .seq(function () {
-            console.dir(allocated);
+            ports.query(function (ps) {
+                console.dir(ps);
+            });
         })
     ;
     

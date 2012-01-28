@@ -140,17 +140,27 @@ seaport.createServer = function (opts) {
                 role = env_;
                 env_ = env;
             }
-            cb(server.query(env, role));
+            else if (typeof env_ === 'function') {
+                cb = env_;
+                role = undefined;
+                env_ = env;
+            }
+            cb(server.query(env_, role));
         };
         
         return self;
     }
     
     server.query = function (env, role) {
-        return role === undefined
-            ? roles
-            : roles[env] && roles[env][role] || []
-        ;
+        if (role === undefined) {
+            return roles[env]
+        }
+        else if (env === undefined) {
+            return roles;
+        }
+        else {
+            return roles[env] && roles[env][role] || []
+        }
     };
     
     server.use(upnode.ping);
