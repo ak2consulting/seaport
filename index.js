@@ -105,8 +105,8 @@ seaport.createServer = function (opts) {
         conn.on('ready', function () {
             addr = conn.stream.remoteAddress;
             env = remote.environment;
-            if (!roles[env]) roles[env] = {};
-            if (!ports[addr]) ports[addr] = [];
+            if (env && !roles[env]) roles[env] = {};
+            if (env && !ports[addr]) ports[addr] = [];
         });
         
         conn.on('end', function () {
@@ -231,11 +231,11 @@ seaport.createServer = function (opts) {
     }
     
     server.query = function (env, role) {
-        if (role === undefined) {
-            return roles[env]
-        }
-        else if (env === undefined) {
+        if (env === undefined) {
             return roles;
+        }
+        else if (role === undefined) {
+            return roles[env]
         }
         else {
             return roles[env] && roles[env][role] || []
