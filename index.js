@@ -16,13 +16,21 @@ var seaport = module.exports = function (env) {
                         env_ = env;
                     }
                     
-                    self.wait(role, function (ps) {
+                    function ondown () {
+                        self.wait(role, onwait);
+                    }
+                    self.wait(role, onwait);
+                    
+                    function onwait (ps) {
+                        up.removeListener('down', ondown);
+                        
                         var inst = upnode.apply(null, args);
                         res = inst.connect(ps[0].host, ps[0].port, fn);
                         
                         target.close = res.close.bind(inst);
                         queue.forEach(function (cb) { res(cb) });
-                    });
+                    }
+                    up.on('down', ondown);
                     
                     var res;
                     var queue = [];
