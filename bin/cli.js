@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 var seaport = require('../');
-var seq = require('seq');
 
 var argv = require('optimist')
     .demand(1)
