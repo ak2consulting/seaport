@@ -4,70 +4,12 @@ var dnode = require('dnode');
 var seaport = module.exports = function (env) {
     function connect () {
         var up = upnode({ environment : env }).connect.apply(null, arguments);
-        var self = function () {
-            var args = [].slice.call(arguments);
-            
-            return {
-                connect : function (env_, role, fn) {
-                    if (role === undefined || typeof role === 'function') {
-                        fn = role;
-                        role = env_;
-                        env_ = env;
-                    }
-                    
-                    function ondown () {
-                        self.get(role, onget);
-                    }
-                    self.get(role, onget);
-                    
-                    function onget (ps) {
-                        up.removeListener('down', ondown);
-                        
-                        var inst = upnode.apply(null, args);
-                        res = inst.connect(ps[0].host, ps[0].port, fn);
-                        
-                        target.close = res.close.bind(inst);
-                        queue.forEach(function (cb) { res(cb) });
-                    }
-                    up.on('down', ondown);
-                    
-                    var res;
-                    var queue = [];
-                    
-                    var target = function (cb) {
-                        if (!res) queue.push(cb);
-                        else res(cb);
-                    };
-                    return target;
-                },
-                listen : function (role, fn) {
-                    var server = dnode.apply(null, args);
-                    server.use(upnode.ping);
-                    
-                    self.allocate(role, function (port) {
-                        server.listen(port, fn);
-                        
-                        up.on('down', function () {
-                            self.assume(role, port);
-                        });
-                    });
-                    return server;
-                },
-            };
-        };
         
-        self.connect = function () {
-            var x = self();
-            return x.connect.apply(x, arguments);
+        var self = {
+            environent : env,
+            up : up,
+            close : up.close.bind(up),
         };
-        
-        self.listen = function () {
-            var x = self();
-            return x.listen.apply(x, arguments);
-        };
-        
-        self.up = up;
-        self.close = up.close.bind(up);
         
         [ 'free', 'query', 'assume', 'get', 'service' ]
             .forEach(function (name) {
