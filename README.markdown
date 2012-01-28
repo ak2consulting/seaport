@@ -63,69 +63,21 @@ beep boop
 and if you spin up `client.js` before `server.js` then it still works because
 `get()` queues the response!
 
-upnode service connections
---------------------------
-
-beep.js
-
-``` js
-var seaport = require('seaport');
-var ports = seaport('testing').connect(9090);
-
-var beep = ports(function (remote, conn) {
-    this.fives = function (n, cb) { cb(n * 5) }
-}).listen('beep');
-```
-
-connect.js
-
-``` js
-var seaport = require('seaport');
-var ports = seaport('testing').connect(9090);
-
-var up = ports.connect('beep');
-up(function (remote) {
-    remote.fives(11, function (n) {
-        console.log('fives(11) : ' + n);
-    });
-});
-```
-
-output
+command-line usage
+==================
 
 ```
-$ seaport 9090 &
-[1] 11035
-seaport listening on :9090
-$ node connect.js &
-[2] 7143
-$ node beep.js &
-[3] 9040
-fives(11) : 55
-$ 
+Usage:
+  seaport port            # to listen
+  seaport host:port show  # to show the port map
 ```
 
 methods
 =======
 
-``` js
+```
 var seaport = require('seaport')
 ```
-
-var server = seaport.createServer()
------------------------------------
-
-Create a new dnode seaport server.
-
-The server emits `'allocate'` and `'free'` events when clients allocate and free
-ports.
-
-server.query(env, role)
------------------------
-
-Return the services in the environment `env` that satisfy the role `role`.
-
-Services are just objects that look like: `{ host : '1.2.3.4', port : 5678 }`.
 
 var ports = seaport(env).connect(...)
 -------------------------------------
@@ -148,24 +100,6 @@ Create a service fulfilling the role of `role`.
 Receive a callback `cb(port, ready)` with the allocated `port` and `ready()`
 function to call and re-assume the `port` every time the seaport service
 connection gets interrupted.
-
-var up = ports.connect(role)
-----------------------------
-
-Return a new [upnode](https://github.com/substack/upnode) connection that
-fulfills the `role` for the given environment `env`.
-
-var service = ports(fn)
------------------------
-
-Create a new [upnode](https://github.com/substack/upnode) service with the
-[dnode](https://github.com/substack/dnode) constructor `fn`.
-
-service.listen(role)
---------------------
-
-Expose the [upnode](https://github.com/substack/upnode) `service` to the seaport
-server fulfilling the role `role`.
 
 ports.allocate(role, cb)
 ------------------------
@@ -195,13 +129,33 @@ Get the services in the environment `env` that satisfy the role `role` in
 
 Services are just objects that look like: `{ host : '1.2.3.4', port : 5678 }`.
 
+server methods
+==============
+
+Instead of using the command-line tool to spin up a seaport server, you can use
+these api methods:
+
+var server = seaport.createServer()
+-----------------------------------
+
+Create a new dnode seaport server.
+
+The server emits `'allocate'`, `'assume'`, and `'free'` events when clients
+allocate, assume, and free ports.
+
 install
 =======
 
-With [npm](http://npmjs.org) do:
+To get the seaport library, with [npm](http://npmjs.org) do:
 
 ```
 npm install seaport
+```
+
+To get the seaport command, do:
+
+```
+npm install -g seaport
 ```
 
 license
