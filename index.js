@@ -3,14 +3,53 @@ var dnode = require('dnode');
 var port = parseInt(process.argv[2], 10);
 
 var seaport = module.exports = function (env) {
-    if (env === 'error') return undefined; // NICE TRY
-    
     function connect () {
         var up = upnode({ environment : env }).connect.apply(null, arguments);
-        var self = {
-            up : up,
-            close : up.close.bind(up),
+        var self = function () {
+            var inst = upnode.apply(null, arguments);
+            
+            return {
+                connect : function (env_, role, fn) {
+                    if (role === undefined || typeof role === 'function') {
+                        fn = role;
+                        role = env_;
+                        env_ = env;
+                    }
+                    var rs = role.split(':');
+                    
+                    self.query(rs[0], function (ps) {
+                        var ix = rs[1]
+                            ? parseInt(rs[1], 10)
+                            : Math.floor(Math.random() * ps.length)
+                        ;
+                        res = inst.connect(ps[ix].host, ps[ix].port, fn);
+                        queue.forEach(function (cb) { res(cb) });
+                    });
+                    
+                    var res;
+                    var queue = [];
+                    return function (cb) {
+                        if (!res) queue.push(cb);
+                        else res(cb);
+                    };
+                },
+                listen : function () {
+                },
+            };
         };
+        
+        self.connect = function () {
+            var x = self();
+            return x.connect.apply(x, arguments);
+        };
+        
+        self.listen = function () {
+            var x = self();
+            return x.listen.apply(x, arguments);
+        };
+        
+        self.up = up;
+        self.close = up.close.bind(up);
         
         [ 'allocate', 'free', 'query', 'assume' ].forEach(function (name) {
             self[name] = function () {
