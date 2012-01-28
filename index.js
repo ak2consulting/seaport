@@ -15,13 +15,8 @@ var seaport = module.exports = function (env) {
                         role = env_;
                         env_ = env;
                     }
-                    var rs = role.split(':');
                     
-                    self.query(rs[0], function (ps) {
-                        var ix = rs[1]
-                            ? parseInt(rs[1], 10)
-                            : Math.floor(Math.random() * ps.length)
-                        ;
+                    self.wait(role, function (ps) {
                         res = inst.connect(ps[ix].host, ps[ix].port, fn);
                         queue.forEach(function (cb) { res(cb) });
                     });
@@ -51,15 +46,17 @@ var seaport = module.exports = function (env) {
         self.up = up;
         self.close = up.close.bind(up);
         
-        [ 'allocate', 'free', 'query', 'assume' ].forEach(function (name) {
-            self[name] = function () {
-                var args = [].slice.call(arguments);
-                
-                up(function (remote) {
-                    remote[name].apply(null, args);
-                });
-            };
-        });
+        [ 'allocate', 'free', 'query', 'assume', 'wait' ]
+            .forEach(function (name) {
+                self[name] = function () {
+                    var args = [].slice.call(arguments);
+                    
+                    up(function (remote) {
+                        remote[name].apply(null, args);
+                    });
+                };
+            })
+        ;
         
         return self;
     }
@@ -189,6 +186,33 @@ seaport.createServer = function (opts) {
                 env_ = env;
             }
             cb(server.query(env_, role));
+        };
+        
+        self.wait = function (env_, role, cb) {
+            if (role === undefined) {
+                role = env_;
+                env_ = env;
+            }
+            else if (typeof role === 'function') {
+                cb = role;
+                role = env_;
+                env_ = env;
+            }
+            var ps = server.query(env_, role);
+            
+            if (ps.length > 0) cb(ps)
+            else {
+                function onalloc (alloc) {
+                    ps = server.query(env_, role);
+                    if (ps.length > 0) {
+                        server.removeListener('allocate', onalloc);
+                        server.removeListener('assume', onalloc);
+                        cb(ps);
+                    }
+                }
+                server.on('allocate', onalloc);
+                server.on('assume', onalloc);
+            }
         };
         
         return self;
