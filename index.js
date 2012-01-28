@@ -17,11 +17,11 @@ var seaport = module.exports = function (env) {
                     }
                     
                     function ondown () {
-                        self.wait(role, onwait);
+                        self.get(role, onget);
                     }
-                    self.wait(role, onwait);
+                    self.get(role, onget);
                     
-                    function onwait (ps) {
+                    function onget (ps) {
                         up.removeListener('down', ondown);
                         
                         var inst = upnode.apply(null, args);
@@ -70,7 +70,7 @@ var seaport = module.exports = function (env) {
         self.up = up;
         self.close = up.close.bind(up);
         
-        [ 'allocate', 'free', 'query', 'assume', 'wait' ]
+        [ 'allocate', 'free', 'query', 'assume', 'get', 'service' ]
             .forEach(function (name) {
                 self[name] = function () {
                     var args = [].slice.call(arguments);
@@ -81,6 +81,17 @@ var seaport = module.exports = function (env) {
                 };
             })
         ;
+        
+        self.service = function (role, fn) {
+            self.allocate(role, function (port, ready) {
+                up.on('up', function () {
+                    self.assume(role, port);
+                });
+                
+                fn(port, ready);
+                if (fn.length === 1) ready();
+            });
+        };
         
         return self;
     }
@@ -142,17 +153,26 @@ seaport.createServer = function (opts) {
                 port = Math.floor(Math.random() * (r[1] - r[0])) + r[0];
             } while (ports[addr][port]);
             
-            ports[addr].push(port);
-            roles[env][role].push({ host : addr, port : port });
-            allocatedPorts.push(port);
+            function ready () {
+                ports[addr].push(port);
+                roles[env][role].push({ host : addr, port : port });
+                allocatedPorts.push(port);
+                
+                server.emit('allocate', {
+                    role : role,
+                    host : addr,
+                    port : port,
+                    environment : env,
+                });
+            }
             
-            cb(port);
-            server.emit('allocate', {
-                role : role,
-                host : addr,
-                port : port,
-                environment : env,
-            });
+            if (cb.length === 1) {
+                cb(port);
+                ready();
+            }
+            else {
+                cb(port, ready);
+            }
         };
         
         self.assume = function (role, port, cb) {
@@ -214,7 +234,7 @@ seaport.createServer = function (opts) {
             cb(server.query(env_, role));
         };
         
-        self.wait = function (env_, role, cb) {
+        self.get = function (env_, role, cb) {
             if (role === undefined) {
                 role = env_;
                 env_ = env;
