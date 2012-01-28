@@ -2,7 +2,7 @@ var test = require('tap').test;
 var seaport = require('../');
 
 test('connect with upnode', function (t) {
-    t.plan(4);
+    t.plan(1);
     var port = Math.floor(Math.random() * 5e5 + 1e4);
     var server = seaport.createServer();
     server.listen(port);
@@ -16,10 +16,14 @@ test('connect with upnode', function (t) {
     up(function (remote) {
         remote.fives(11, function (n) {
             t.equal(n, 55);
+            t.end();
+            
+            ports.a.close();
+            ports.b.close();
             up.close();
+            
             server.close();
             beep.close();
-            t.end();
         });
     });
     

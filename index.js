@@ -6,7 +6,7 @@ var seaport = module.exports = function (env) {
     function connect () {
         var up = upnode({ environment : env }).connect.apply(null, arguments);
         var self = function () {
-            var inst = upnode.apply(null, arguments);
+            var args = [].slice.call(arguments);
             
             return {
                 connect : function (env_, role, fn) {
@@ -17,18 +17,30 @@ var seaport = module.exports = function (env) {
                     }
                     
                     self.wait(role, function (ps) {
-                        res = inst.connect(ps[ix].host, ps[ix].port, fn);
+                        var inst = upnode.apply(null, args);
+                        res = inst.connect(ps[0].host, ps[0].port, fn);
+                        
+                        target.close = res.close.bind(inst);
                         queue.forEach(function (cb) { res(cb) });
                     });
                     
                     var res;
                     var queue = [];
-                    return function (cb) {
+                    
+                    var target = function (cb) {
                         if (!res) queue.push(cb);
                         else res(cb);
                     };
+                    return target;
                 },
-                listen : function () {
+                listen : function (role, fn) {
+                    var server = dnode.apply(null, args);
+                    server.use(upnode.ping);
+                    
+                    self.allocate(role, function (port) {
+                        server.listen(port, fn);
+                    });
+                    return server;
                 },
             };
         };
