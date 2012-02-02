@@ -1,5 +1,6 @@
 var upnode = require('upnode');
 var dnode = require('dnode');
+var semver = require('semver');
 
 var seaport = module.exports = function (env) {
     function connect () {
@@ -94,7 +95,10 @@ seaport.createServer = function (opts) {
             });
         });
         
-        self.allocate = function (role, n, cb) {
+        self.allocate = function (roleVer, n, cb) {
+            var role = roleVer.split('@')[0];
+            var version = roleVer.split('@')[1] || '0.0.0';
+            
             if (typeof n === 'function') {
                 cb = n;
                 n = 1;
@@ -111,7 +115,11 @@ seaport.createServer = function (opts) {
             
             function ready () {
                 ports[addr].push(port);
-                roles[env][role].push({ host : addr, port : port });
+                roles[env][role].push({
+                    host : addr,
+                    port : port,
+                    version : version,
+                });
                 allocatedPorts.push(port);
                 
                 server.emit('allocate', {
@@ -119,13 +127,17 @@ seaport.createServer = function (opts) {
                     host : addr,
                     port : port,
                     environment : env,
+                    version : version,
                 });
             }
             
             cb(port, ready);
         };
         
-        self.assume = function (role, port, cb) {
+        self.assume = function (roleVer, port, cb) {
+            var role = roleVer.split('@')[0];
+            var version = roleVer.split('@')[1];
+            
             var ix = ports[addr].indexOf(port);
             if (ix >= 0) ports[addr].splice(ix, 1);
             ports[addr].push(port);
@@ -134,13 +146,18 @@ seaport.createServer = function (opts) {
             roles[env][role] = (roles[env][role] || []).filter(function (r) {
                 return r.port !== port;
             });
-            roles[env][role].push({ host : addr, port : port });
+            roles[env][role].push({
+                host : addr,
+                port : port,
+                version : version,
+            });
             
             server.emit('assume', {
                 role : role,
                 host : addr,
                 port : port, 
                 environment : env,
+                version : version,
             });
             if (cb) cb();
         };
@@ -151,19 +168,23 @@ seaport.createServer = function (opts) {
                 if (ix >= 0) ports[addr].splice(ix, 1);
             }
             
-            var foundRole = undefined;
+            var found;
+            
             Object.keys(roles[env]).forEach(function (role) {
                 var rs = roles[env][role];
                 roles[env][role] = rs.filter(function (r) {
                     var x = !(r.port === port && r.host === addr);
-                    if (!x) foundRole = role;
+                    if (!x) {
+                        found = { role : role, version : r.version };
+                    }
                     return x;
                 });
             });
             
             if (typeof cb === 'function') cb();
             server.emit('free', {
-                role : foundRole,
+                role : found && found.role,
+                version : found && found.version,
                 host : addr,
                 port : port,
                 environment : env,
@@ -214,15 +235,28 @@ seaport.createServer = function (opts) {
         return self;
     }
     
-    server.query = function (env, role) {
+    server.query = function (env, roleVer) {
         if (env === undefined) {
             return roles;
         }
-        else if (role === undefined) {
+        else if (roleVer === undefined) {
             return roles[env]
         }
         else {
-            return roles[env] && roles[env][role] || []
+            var role = roleVer.split('@')[0];
+            var version = roleVer.split('@')[1];
+            
+            if (!roles[env]) {
+                return undefined;
+            }
+            else if (version === undefined) {
+                return roles[env][role] || [];
+            }
+            else {
+                return (roles[env][role] || []).filter(function (r) {
+                    return semver.satisfies(r.version, version);
+                });
+            }
         }
     };
     

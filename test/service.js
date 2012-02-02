@@ -2,6 +2,7 @@ var seaport = require('../');
 var test = require('tap').test;
 
 test('service', function (t) {
+    t.plan(4);
     var serverPort = Math.floor(Math.random() * 5e5 + 1e5);
     var server = seaport.createServer();
     server.listen(serverPort);
@@ -14,7 +15,9 @@ test('service', function (t) {
     var t0 = Date.now();
     ports[0].get('woo', function (ps) {
         t.ok(Date.now() - t0 >= 100);
-        t.deepEqual(ps, [ { host : '127.0.0.1', port : gotPort } ]);
+        t.equal(ps.length, 1);
+        t.equal(ps[0].host, '127.0.0.1');
+        t.equal(ps[0].port, gotPort);
         t.end();
     });
     

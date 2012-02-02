@@ -2,7 +2,7 @@ var test = require('tap').test;
 var seaport = require('../');
 
 test('alloc and free', function (t) {
-    t.plan(4);
+    t.plan(6);
     var port = Math.floor(Math.random() * 5e5 + 1e5);
     var server = seaport.createServer();
     
@@ -11,7 +11,9 @@ test('alloc and free', function (t) {
         t.equal(gotPort, alloc.port);
         
         ports.query('http', function (ps) {
-            t.deepEqual(ps, [ { host : '127.0.0.1', port : gotPort } ]);
+            t.equal(ps.length, 1);
+            t.equal(ps[0].host, '127.0.0.1');
+            t.equal(ps[0].port, gotPort);
             ports.close();
         });
     });
