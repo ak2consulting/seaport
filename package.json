@@ -1,7 +1,7 @@
 {
     "name" : "seaport",
-    "description" : "central role-based port allocation for clusters",
-    "version" : "0.3.1",
+    "description" : "service registry and port assignment for clusters",
+    "version" : "0.4.0",
     "repository" : {
         "type" : "git",
         "url" : "git://github.com/substack/seaport.git"
@@ -14,6 +14,8 @@
         "port",
         "allocate",
         "hub",
+        "service",
+        "registry",
         "roles"
     ],
     "directories" : {

@@ -1,7 +1,7 @@
 seaport
 =======
 
-central role-based port allocation for clusters
+service registry and port assignment for clusters
 
 ![crane](http://substack.net/images/crane.png)
 
@@ -78,6 +78,10 @@ methods
 ```
 var seaport = require('seaport')
 ```
+
+All the parameters that take a `role` parameter can be intelligently versioned
+with [semvers](https://github.com/isaacs/node-semver) by specifying a version in
+the `role` parameter after an `'@'` character.
 
 var ports = seaport(env).connect(...)
 -------------------------------------
