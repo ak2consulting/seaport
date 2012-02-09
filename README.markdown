@@ -68,8 +68,25 @@ command-line usage
 
 ```
 Usage:
-  seaport port            # to listen
-  seaport host:port show  # to show the port map
+
+  seaport port
+
+    Create seaport server.
+
+  seaport host:port show
+
+    Show the port map from the server at host:port.
+
+  seaport host:port service name@version [COMMAND...]
+
+    Register a service. COMMAND will get an assigned port to use as
+    its last argument. If COMMAND exits it will be restarted.
+
+  seaport host:port query name@version
+
+    Query the server for services matching the name@version pattern.
+    The version may contain semver patterns to specify a range.
+    Prints out a JSON array of host:port strings.
 ```
 
 methods

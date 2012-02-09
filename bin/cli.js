@@ -17,8 +17,8 @@ var argv = require('optimist')
         '',
         '  $0 host:port service name@version [COMMAND...]',
         '',
-        '    Register a service. COMMAND will get an assigned port to use as'
-            + ' its last argument. If COMMAND exits it will be restarted.',
+        '    Register a service. COMMAND will get an assigned port to use as',
+        '    its last argument. If COMMAND exits it will be restarted.',
         '',
         '  $0 host:port query name@version',
         '',
