@@ -100,10 +100,10 @@ All the parameters that take a `role` parameter can be intelligently versioned
 with [semvers](https://github.com/isaacs/node-semver) by specifying a version in
 the `role` parameter after an `'@'` character.
 
-var ports = seaport(env).connect(...)
--------------------------------------
+var ports = seaport.connect(...)
+--------------------------------
 
-Connect to the seaport service at `...` under the environment `env`.
+Connect to the seaport service at `...`.
 
 ports.get(role, cb)
 -------------------
@@ -142,11 +142,10 @@ ports.assume(role, port, cb)
 Dictate to the server what port you are listening on.
 This is useful for re-establishing a route without restarting the server.
 
-ports.query(env, role, cb)
---------------------------
+ports.query(role, cb)
+---------------------
 
-Get the services in the environment `env` that satisfy the role `role` in
-`cb(services)`.
+Get the services that satisfy the role `role` in `cb(services)`.
 
 Services are just objects that look like: `{ host : '1.2.3.4', port : 5678 }`.
 
