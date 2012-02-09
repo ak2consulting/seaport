@@ -19,7 +19,7 @@ test('alloc and free', function (t) {
     });
     
     server.on('free', function () {
-        ports = seaport('staging').connect('localhost', port);
+        ports = seaport.connect('localhost', port);
         ports.assume('http', gotPort);
     });
     
@@ -36,7 +36,7 @@ test('alloc and free', function (t) {
     
     server.listen(port);
     
-    var ports = seaport('staging').connect('localhost', port);
+    var ports = seaport.connect('localhost', port);
     
     ports.allocate('http', function (p) {
         t.ok(p >= 10000 && p < 65536);

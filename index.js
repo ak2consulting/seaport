@@ -2,12 +2,11 @@ var upnode = require('upnode');
 var dnode = require('dnode');
 var semver = require('semver');
 
-var seaport = module.exports = function (env) {
+var seaport = module.exports = function () {
     function connect () {
-        var up = upnode({ environment : env }).connect.apply(null, arguments);
+        var up = upnode().connect.apply(null, arguments);
         
         var self = {
-            environent : env,
             up : up,
             close : up.close.bind(up),
         };
@@ -55,7 +54,7 @@ var seaport = module.exports = function (env) {
     return { connect : connect }
 };
 
-seaport.connect = seaport('production').connect;
+seaport.connect = seaport('default').connect;
 
 seaport.createServer = function (opts) {
     if (typeof opts === 'function') {
@@ -81,12 +80,10 @@ seaport.createServer = function (opts) {
         var self = {};
         var allocatedPorts = [];
         
-        var addr, env;
+        var addr;
         conn.on('ready', function () {
             addr = conn.stream.remoteAddress;
-            env = remote.environment;
-            if (env && !roles[env]) roles[env] = {};
-            if (env && !ports[addr]) ports[addr] = [];
+            if (!ports[addr]) ports[addr] = [];
         });
         
         conn.on('end', function () {
@@ -104,7 +101,7 @@ seaport.createServer = function (opts) {
                 n = 1;
             }
             if (typeof cb !== 'function') return;
-            if (!roles[env][role]) roles[env][role] = [];
+            if (!roles[role]) roles[role] = [];
             
             var r = opts.range[addr] || opts.range['*'];
             
@@ -115,7 +112,7 @@ seaport.createServer = function (opts) {
             
             function ready () {
                 ports[addr].push(port);
-                roles[env][role].push({
+                roles[role].push({
                     host : addr,
                     port : port,
                     version : version,
@@ -126,7 +123,6 @@ seaport.createServer = function (opts) {
                     role : role,
                     host : addr,
                     port : port,
-                    environment : env,
                     version : version,
                 });
             }
@@ -143,10 +139,10 @@ seaport.createServer = function (opts) {
             ports[addr].push(port);
             allocatedPorts.push(port);
             
-            roles[env][role] = (roles[env][role] || []).filter(function (r) {
+            roles[role] = (roles[role] || []).filter(function (r) {
                 return r.port !== port;
             });
-            roles[env][role].push({
+            roles[role].push({
                 host : addr,
                 port : port,
                 version : version,
@@ -156,7 +152,6 @@ seaport.createServer = function (opts) {
                 role : role,
                 host : addr,
                 port : port, 
-                environment : env,
                 version : version,
             });
             if (cb) cb();
@@ -170,9 +165,9 @@ seaport.createServer = function (opts) {
             
             var found;
             
-            Object.keys(roles[env]).forEach(function (role) {
-                var rs = roles[env][role];
-                roles[env][role] = rs.filter(function (r) {
+            Object.keys(roles).forEach(function (role) {
+                var rs = roles[role];
+                roles[role] = rs.filter(function (r) {
                     var x = !(r.port === port && r.host === addr);
                     if (!x) {
                         found = { role : role, version : r.version };
@@ -187,40 +182,28 @@ seaport.createServer = function (opts) {
                 version : found && found.version,
                 host : addr,
                 port : port,
-                environment : env,
             });
         };
         
-        self.query = function (env_, role, cb) {
+        self.query = function (role, cb) {
             if (typeof role === 'function') {
                 cb = role;
-                role = env_;
-                env_ = env;
-            }
-            else if (typeof env_ === 'function') {
-                cb = env_;
                 role = undefined;
-                env_ = env;
             }
-            cb(server.query(env_, role));
+            cb(server.query(role));
         };
         
-        self.get = function (env_, role, cb) {
-            if (role === undefined) {
-                role = env_;
-                env_ = env;
-            }
-            else if (typeof role === 'function') {
+        self.get = function (role, cb) {
+            if (typeof role === 'function') {
                 cb = role;
-                role = env_;
-                env_ = env;
+                role = undefined;
             }
-            var ps = server.query(env_, role);
+            var ps = server.query(role);
             
             if (ps.length > 0) cb(ps)
             else {
                 function onalloc (alloc) {
-                    ps = server.query(env_, role);
+                    ps = server.query(role);
                     if (ps.length > 0) {
                         server.removeListener('allocate', onalloc);
                         server.removeListener('assume', onalloc);
@@ -235,25 +218,19 @@ seaport.createServer = function (opts) {
         return self;
     }
     
-    server.query = function (env, roleVer) {
-        if (env === undefined) {
+    server.query = function (roleVer) {
+        if (roleVer === undefined) {
             return roles;
-        }
-        else if (roleVer === undefined) {
-            return roles[env]
         }
         else {
             var role = roleVer.split('@')[0];
             var version = roleVer.split('@')[1];
             
-            if (!roles[env]) {
-                return undefined;
-            }
-            else if (version === undefined) {
-                return roles[env][role] || [];
+            if (version === undefined) {
+                return roles[role] || [];
             }
             else {
-                return (roles[env][role] || []).filter(function (r) {
+                return (roles[role] || []).filter(function (r) {
                     return semver.satisfies(r.version, version);
                 });
             }
