@@ -24,14 +24,14 @@ server.js:
 
 ``` js
 var seaport = require('seaport');
-var ports = seaport.connect('localhost', 9090);
+var ports = seaport.connect('localhost', 9090, { secret : 'beep boop' });
 var http = require('http');
 
 var server = http.createServer(function (req, res) {
     res.end('beep boop\r\n');
 });
 
-ports.service('http server', function (port, ready) {
+ports.service('web@1.2.3', function (port, ready) {
     server.listen(port, ready);
 });
 ```
@@ -42,10 +42,10 @@ client.js:
 
 ``` js
 var seaport = require('seaport');
-var ports = seaport.connect(9090);
+var ports = seaport.connect(9090, { secret : 'beep boop' });
 var request = require('request');
 
-ports.get('http server', function (ps) {
+ports.get('web@1.2.x', function (ps) {
     var u = 'http://' + ps[0].host + ':' + ps[0].port;
     request(u).pipe(process.stdout);
 });
