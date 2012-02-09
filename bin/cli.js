@@ -32,7 +32,7 @@ var argv = require('optimist')
 if (typeof argv._[0] === 'number') {
     var port = argv._[0];
     
-    var server = seaport.createServer();
+    var server = seaport.createServer(argv);
     server.listen(port);
     console.log('seaport listening on :' + port);
 }
@@ -44,7 +44,7 @@ else {
     var cmd = argv._[1];
     
     if (cmd === 'service') {
-        var ports = seaport.connect(host, port);
+        var ports = seaport.connect(host, port, argv);
         ports.service(argv._[2], function respawn (port) {
             var ps = spawn(argv._[3], argv._.slice(4).concat(port));
             ps.stdout.pipe(process.stdout, { end : false });

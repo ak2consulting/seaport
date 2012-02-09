@@ -1,62 +1,75 @@
 var upnode = require('upnode');
 var dnode = require('dnode');
 var semver = require('semver');
+var EventEmitter = require('events').EventEmitter;
 
-var seaport = module.exports = function () {
-    function connect () {
-        var up = upnode().connect.apply(null, arguments);
-        
-        var self = {
-            up : up,
-            close : up.close.bind(up),
-        };
-        
-        [ 'free', 'query', 'assume', 'get', 'service' ]
-            .forEach(function (name) {
-                self[name] = function () {
-                    var args = [].slice.call(arguments);
-                    
-                    up(function (remote) {
-                        remote[name].apply(null, args);
-                    });
-                };
-            })
-        ;
-        
-        self.allocate = function () {
-            var args = [].slice.call(arguments);
-            var fn = args[args.length - 1];
-            if (fn.length === 1) {
-                args[args.length - 1] = function (port, ready) {
-                    fn(port);
-                    ready();
-                };
-            }
-            
-            up(function (remote) {
-                remote.allocate.apply(null, args);
+exports.connect = function () {
+    var argv = [].slice.call(arguments).reduce(function (acc, arg) {
+        if (arg && typeof arg === 'object' && arg.secret) {
+            acc.secret = arg.secret;
+        }
+        acc.args.push(arg);
+        return acc;
+    }, { args : [] });
+    
+    argv.args.push(function (remote, conn) {
+        if (remote.auth) {
+            remote.auth(argv.secret, function (err, res) {
+                if (err) self.emit('error', new Error(err));
+                else conn.emit('up', res);
             });
-        };
-        
-        self.service = function (role, fn) {
-            self.allocate(role, function (port, ready) {
-                up.on('up', function () {
-                    self.assume(role, port);
-                });
+        }
+        else conn.emit('up', remote)
+    });
+    
+    var up = upnode.connect.apply(null, argv.args);
+    
+    var self = new EventEmitter;
+    self.up = up;
+    self.close = up.close.bind(up);
+    
+    [ 'free', 'query', 'assume', 'get', 'service' ]
+        .forEach(function (name) {
+            self[name] = function () {
+                var args = [].slice.call(arguments);
                 
-                fn(port, ready);
-                if (fn.length === 1) ready();
-            });
-        };
+                up(function (remote) {
+                    remote[name].apply(null, args);
+                });
+            };
+        })
+    ;
+    
+    self.allocate = function () {
+        var args = [].slice.call(arguments);
+        var fn = args[args.length - 1];
+        if (fn.length === 1) {
+            args[args.length - 1] = function (port, ready) {
+                fn(port);
+                ready();
+            };
+        }
         
-        return self;
-    }
-    return { connect : connect }
-};
+        up(function (remote) {
+            remote.allocate.apply(null, args);
+        });
+    };
+    
+    self.service = function (role, fn) {
+        self.allocate(role, function (port, ready) {
+            up.on('up', function () {
+                self.assume(role, port);
+            });
+            
+            fn(port, ready);
+            if (fn.length === 1) ready();
+        });
+    };
+    
+    return self;
+}
 
-seaport.connect = seaport('default').connect;
-
-seaport.createServer = function (opts) {
+exports.createServer = function (opts) {
     if (typeof opts === 'function') {
         fn = opts;
         opts = {};
@@ -80,11 +93,12 @@ seaport.createServer = function (opts) {
         var self = {};
         var allocatedPorts = [];
         
-        var addr;
-        conn.on('ready', function () {
+        conn.on('ready', onready);
+        function onready () {
             addr = conn.stream.remoteAddress;
             if (!ports[addr]) ports[addr] = [];
-        });
+        }
+        if (conn.stream) onready();
         
         conn.on('end', function () {
             allocatedPorts.forEach(function (port) {
