@@ -6,8 +6,8 @@ bouncy(function (req, bounce) {
     var domains = (req.headers.host || '').split('.');
     var service = 'http@' + ({
         unstable : '0.1.x',
-        stable : '0.0.0',
-    }[domains[0]] || '0.0.0');
+        stable : '0.0.x',
+    }[domains[0]] || '0.0.x');
     
     var ps = ports.query(service);
     
