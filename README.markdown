@@ -68,21 +68,25 @@ command-line usage
 
 ```
 Usage:
+  
+  OPTIONS
+  
+    --secret   Use a service password for seaport connections.
 
-  seaport port
+  seaport port OPTIONS
 
     Create seaport server.
 
-  seaport host:port show
+  seaport host:port show OPTIONS
 
     Show the port map from the server at host:port.
 
-  seaport host:port service name@version [COMMAND...]
+  seaport host:port service name@version OPTIONS -- [COMMAND...]
 
     Register a service. COMMAND will get an assigned port to use as
     its last argument. If COMMAND exits it will be restarted.
 
-  seaport host:port query name@version
+  seaport host:port query name@version OPTIONS
 
     Query the server for services matching the name@version pattern.
     The version may contain semver patterns to specify a range.

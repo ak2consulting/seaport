@@ -7,6 +7,10 @@ var argv = require('optimist')
     .usage([
         'Usage:',
         '',
+        '  OPTIONS',
+        '',
+        '    --secret   Use a service password for seaport connections.',
+        '',
         '  $0 port',
         '',
         '    Create seaport server.',
