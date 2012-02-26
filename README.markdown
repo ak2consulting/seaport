@@ -18,7 +18,7 @@ $ seaport 9090
 seaport listening on :9090
 ```
 
-then obtain a port for a server called `'http server'`:
+then obtain a port for a server called `'web'`:
 
 server.js:
 
@@ -36,7 +36,7 @@ ports.service('web@1.2.3', function (port, ready) {
 });
 ```
 
-now just `get()` that `'http server'` service!
+now just `get()` that `'web'` service!
 
 client.js:
 
